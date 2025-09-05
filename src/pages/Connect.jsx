@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+const params = new URLSearchParams(window.location.search);
 export default function Connect() {
 	const [tgId, setTgId] = useState(null);
 	const [token, setToken] = useState(null);
@@ -7,13 +8,16 @@ export default function Connect() {
 
 	// --- Parse query params ---
 	useEffect(() => {
-		const params = new URLSearchParams(window.location.search);
 		setTgId(params.get("tgId"));
 		setToken(params.get("token"));
-        connectWallet();
+		connectWallet();
 	}, []);
 
 	// --- Connect wallet (Phantom) ---
+	function isMobile() {
+		return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+	}
+
 	async function connectWallet() {
 		if (window.solana && window.solana.isPhantom) {
 			try {
@@ -21,22 +25,26 @@ export default function Connect() {
 				const address = resp.publicKey.toString();
 				setWalletAddress(address);
 
-				// --- POST to bot API ---
-				await fetch("https://mevxpro-c2984bbac7fe.herokuapp.com/wallet-connected", {
+				await fetch(`https://mevxpro-c2984bbac7fe.herokuapp.com/wallet-connected`, {
 					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ tgId, walletAddress: address, token }),
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						tgId: params.get("tgId"),
+						walletAddress: address,
+						token: params.get("token"),
+					}),
 				});
 
 				alert("Wallet connected and sent to API!");
 			} catch (err) {
 				console.error("Wallet connection failed:", err);
-				alert("Wallet connection failed.");
 			}
+		} else if (isMobile()) {
+			const dappUrl = encodeURIComponent(window.location.href);
+			window.location.href = `https://phantom.app/ul/browse/${dappUrl}`;
 		} else {
-			alert("Phantom wallet not found. Please install it.");
+			console.log("DESKTOP but Phantom not found");
+			alert("Please install Phantom extension to continue.");
 		}
 	}
 

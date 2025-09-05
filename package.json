@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "buffer": "^6.0.3",
     "react": "^19.1.1",
@@ -17,6 +18,7 @@
     "react-router-dom": "^7.8.2"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@eslint/js": "^9.33.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",

