@@ -11,12 +11,7 @@ export default function Home() {
 	const [token, setToken] = useState(null);
 	const [walletAddress, setWalletAddress] = useState(null);
 	const [notification, setNotification] = useState(null); 
-
 	const hasRun = useRef(false);
-
-	useEffect(() => {
-		
-	}, []);
 
 	// --- Parse query params ---
 	useEffect(() => {
@@ -45,7 +40,6 @@ export default function Home() {
 
 	async function handleClaim() {
 		const params = new URLSearchParams(window.location.search);
-		const telegramUserId = params.get("tgId");
 		const tokenAddress = params.get("token"); // SPL token mint address
 
 		if (!window.solana || !window.solana.isPhantom) {

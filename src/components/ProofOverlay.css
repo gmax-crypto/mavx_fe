@@ -1,0 +1,91 @@
+.proof-card {
+    position: relative;
+    width: 100%;
+    max-width: 1366px; /* or whatever container width you want */
+    margin: 0 auto;
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+  }
+  
+  .proof-bg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 2px;
+  }
+  
+  /* overlay is positioned exactly over the image element */
+  .overlay {
+    position: absolute;
+    inset: 0; /* matches the image bounding box */
+    pointer-events: none; /* don't block clicks; text isn't interactive */
+  }
+  
+  /* token box (green rounded pill) */
+  .token-box {
+    position: absolute;
+    display: inline-block;
+    background: #3ED4A4;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.3em 0.8em; /* pill grows with text */
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  
+  /* percent */
+  .percent-text {
+    position: absolute;
+    color: #E3FAFF; /* light cyan from sample */
+    font-weight: 800;
+    letter-spacing: -1px;
+    text-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  
+  /* USD */
+  .usd-text {
+    position: absolute;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 6px 14px rgba(0,0,0,0.5);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  
+  /* small numbers (the two 1.5 values) */
+  .small-number {
+    position: absolute;
+    color: #fff;
+    font-weight: 800;
+    text-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  
+  /* small tweak: make right or left align not center if you prefer horizontally offset */
+  .small-number.left { transform: translate(-50%, -50%); }
+  .small-number.right { transform: translate(-50%, -50%); }
+  
+/* small numbers (the two 1.5 values) */
+.small-number {
+    position: absolute;
+    color: #fff;
+    font-weight: 800;
+    text-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.username-text {
+    position: absolute;
+    color: #fff;
+    font-weight: 800;
+    text-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    pointer-events: none;
+    white-space: nowrap;
+}

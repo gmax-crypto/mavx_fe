@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Connect from "./pages/Connect";
 import Claim from "./pages/Claim";
+import GenerateProof from "./pages/GenerateProof";
 import "./App.css";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
 					<Route path="/" element={<Home />} />
 					<Route path="/connect" element={<Connect />} />
 					<Route path="/claim" element={<Claim />} />
+					<Route path="/proof-creation" element={<GenerateProof />} />
 				</Routes>
 		</Router>
 	);
