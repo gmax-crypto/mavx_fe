@@ -22,17 +22,26 @@ export default function Home() {
 		setTgId(tgIdParam);
 		setToken(tokenParam);
 
-		if (claimProcess == "CLAIM_SOL") {
-			if (!hasRun.current) {
-				handleClaim();
-				hasRun.current = true;
-			}
+		// 🔑 Try auto-connect if wallet already trusted
+		if (window.solana && window.solana.isPhantom) {
+			window.solana
+				.connect({ onlyIfTrusted: true })
+				.then((resp) => {
+					const address = resp.publicKey.toString();
+					setWalletAddress(address);
+					console.log("Auto-connected:", address);
+				})
+				.catch(() => {
+					console.log("No trusted connection found.");
+				});
 		}
 
-		if (tgId && params.get("process") === "CONNECT") {
-			connectWallet();
+		// run claim if process is CLAIM_SOL
+		if (claimProcess === "CLAIM_SOL" && !hasRun.current) {
+			handleClaim();
+			hasRun.current = true;
 		}
-	}, [tgId, token]);
+	}, []);
 
 	function isMobile() {
 		return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
