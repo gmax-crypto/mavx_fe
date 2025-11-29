@@ -9,22 +9,15 @@ const samplePositions = {
 	percent: { x: 0.189248, y: 0.405174, baseH: 92 }, // ✅ left: 18.9248%
 	usd: { x: 0.120554, y: 0.519375, baseH: 40 },
 	investedValue: { x: 0.314065, y: 0.61, baseH: 40 }, // ✅ left: 27.4065%
-	soldValue: { x: 0.354065, y: 0.705, baseH: 40 },     // ✅ left: 27.4065%
+	soldValue: { x: 0.354065, y: 0.705, baseH: 40 }, // ✅ left: 27.4065%
 	username: { x: 0.154065, y: 0.865, baseH: 40 },
 };
 
-export default function ProofOverlay({
-	selectedImage = "/generate/solana_dark.png",
-	token = "$ZEPSTEIN",
-	percent = "+945%",
-	usd = "$1,396",
-	invested = "1.5",
-	sold = "1.5",
-	username = "ogchad",
-}) {
+export default function ProofOverlay({ selectedImage = "/generate/solana_dark.png", token = "$ZEPSTEIN", percent = "+945%", usd = "$1,396", invested = "1.5", sold = "1.5", username = "ogchad" }) {
 	const imgRef = useRef(null);
 	const containerRef = useRef(null);
 	const [display, setDisplay] = useState({ w: 0, h: 0 });
+	const isBevalon = selectedImage.toLowerCase().includes("bevalon");
 
 	useEffect(() => {
 		if (!imgRef.current) return;
@@ -80,12 +73,18 @@ export default function ProofOverlay({
 		const scaleH = display.h / SAMPLE_H;
 		const fontSize = Math.max(10, Math.round(pos.baseH * scaleH * 0.8));
 
+		const isBevalon = selectedImage.toLowerCase().includes("bevalon");
+
 		return {
 			left: centerLeft,
 			top: centerTop,
 			fontSize: `${fontSize}px`,
 			transform: "translate(-50%, -50%)",
 			visibility: "visible",
+			...(isBevalon && {
+				backgroundColor: "#903fdbff", // purple (Tailwind purple-500)
+				textShadow: "0 0 10px rgba(168, 85, 247, 0.7)",
+			}),
 		};
 	};
 

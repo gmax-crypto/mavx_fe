@@ -3,7 +3,7 @@ import "./GenerateProof.css";
 import ProofOverlay from "../components/ProofOverlay";
 import html2canvas from "html2canvas"; // ✅ import html2canvas
 
-const imageOptions = ["base_light.png", "base_dark.png", "ethereum_light.png", "ethereum_dark.png", "solana_light.png", "solana_dark.png"];
+const imageOptions = ["bevalon_base.png", "bevalon_solana.png", "bevalon_ethereum.png", "base_light.png", "base_dark.png", "ethereum_light.png", "ethereum_dark.png", "solana_light.png", "solana_dark.png"];
 
 export default function GenerateProof() {
 	const [query, setQuery] = useState("");
